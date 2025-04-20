@@ -1,0 +1,166 @@
+{% extends "chat/base.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>🚀 NASA AI Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+
+    <div class="max-w-2xl w-full mx-auto px-4 py-10 flex-1 flex flex-col">
+        <h1 class="text-3xl font-bold text-center mb-8">🚀 NASA AI Chatbot</h1>
+
+        <div class="bg-gray-800 rounded-xl p-6 flex-1 overflow-y-auto max-h-[60vh]">
+            {% if response %}
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400 mb-1 font-medium">You:</p>
+                    <p class="bg-gray-700 p-3 rounded-lg">{{ query }}</p>
+                </div>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-400 mb-1 font-medium">Bot:</p>
+                    <p class="bg-gray-700 p-3 rounded-lg whitespace-pre-wrap text-sm">{{ response }}</p>
+                </div>
+            {% endif %}
+
+            {% if context %}
+                <div class="mt-6">
+                    <h4 class="text-md font-semibold mb-2 text-blue-400">🔎 Retrieved Context:</h4>
+                    <div class="bg-gray-700 p-3 rounded-lg whitespace-pre-wrap text-sm">
+                        {{ context }}
+                    </div>
+                </div>
+            {% endif %}
+
+            {# ========== APOD IMAGE SECTION ========== #}
+            {% if apod_title or apod_image or explanation %}
+                <div class="mt-8 bg-gray-700 rounded-xl p-4">
+                    {% if apod_title %}
+                        <h2 class="text-2xl font-bold text-blue-400 mb-2">{{ apod_title }}</h2>
+                    {% endif %}
+                    {% if apod_image %}
+                        <img src="{{ apod_image }}" alt="APOD" class="rounded-lg shadow-lg max-w-full h-auto mx-auto my-4">
+                    {% endif %}
+                    {% if explanation %}
+                        <p class="text-sm text-gray-300 whitespace-pre-wrap">{{ explanation }}</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {# ========== NEOWS ASTEROID TABLE ========== #}
+            {% if neows_asteroids %}
+                <div class="mt-8 bg-gray-700 rounded-xl p-4">
+                    <h2 class="text-xl font-semibold text-green-400 mb-2">☄️ Near Earth Asteroids</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-200">
+                            <thead class="text-xs uppercase bg-gray-600 text-gray-100">
+                                <tr>
+                                    <th scope="col" class="px-4 py-2">Name</th>
+                                    <th scope="col" class="px-4 py-2">Close Approach Date</th>
+                                    <th scope="col" class="px-4 py-2">Distance (km)</th>
+                                    <th scope="col" class="px-4 py-2">Diameter (m)</th>
+                                    <th scope="col" class="px-4 py-2">Velocity (km/h)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for asteroid in neows_asteroids %}
+                                    <tr class="bg-gray-800">
+                                        <td class="px-4 py-2">{{ asteroid.name }}</td>
+                                        <td class="px-4 py-2">{{ asteroid.date }}</td>
+                                        <td class="px-4 py-2">{{ asteroid.distance_km }}</td>
+                                        <td class="px-4 py-2">{{ asteroid.diameter_m }}</td>
+                                        <td class="px-4 py-2">{{ asteroid.velocity_kmph }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# ========== EARTH IMAGE SECTION ========== #}
+            {% if earth_image_url %}
+                <div class="mt-8 bg-gray-700 rounded-xl p-4">
+                    <h2 class="text-xl font-semibold text-yellow-400 mb-2">🌍 Earth Imagery</h2>
+                    <img src="{{ earth_image_url }}" alt="Earth Image" class="rounded-lg shadow-lg max-w-full h-auto mx-auto">
+                    <p class="text-sm text-gray-300 mt-2">Closest image based on provided coordinates & date.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        {# ========== CHAT FORM + UPLOAD ========== #}
+        <form method="POST" class="mt-6 flex gap-2 items-center" id="mainForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="text" name="query" placeholder="Ask something like 'What is Artemis I mission?'" class="flex-1 p-3 rounded-lg bg-gray-700 border border-gray-600 placeholder-gray-400" required />
+
+            <label for="pdfFileInput" class="cursor-pointer bg-gray-700 hover:bg-gray-600 p-3 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a1 1 0 001 1h3m10-4v4m0 0l-4-4m4 4l4-4M4 12V4a1 1 0 011-1h10l5 5v4" />
+                </svg>
+            </label>
+            <input type="file" id="pdfFileInput" name="pdf_file" accept=".pdf" class="hidden" />
+
+            <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-700 transition p-3 rounded-lg font-semibold">Ask</button>
+
+            <div id="loadingSpinner" class="hidden ml-2">
+                <svg class="animate-spin h-6 w-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+            </div>
+        </form>
+
+        <p id="uploadStatus" class="text-sm text-gray-300 mt-2 hidden">Uploading...</p>
+
+        <div class="mt-8 text-sm text-gray-400">
+            <p class="mb-1">💡 Try asking:</p>
+            <ul class="list-disc list-inside space-y-1">
+                <li>Show me today's astronomy picture</li>
+                <li>Asteroids close to Earth on 2025-04-20</li>
+                <li>Earth image for Paris on 2024-03-01</li>
+                <li>Tell me about Artemis program</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("mainForm");
+        const spinner = document.getElementById("loadingSpinner");
+        const fileInput = document.getElementById("pdfFileInput");
+        const uploadStatus = document.getElementById("uploadStatus");
+
+        form.addEventListener("submit", () => spinner.classList.remove("hidden"));
+
+        fileInput.addEventListener("change", function () {
+            if (this.files.length === 0) return;
+
+            const formData = new FormData();
+            formData.append("file", this.files[0]);
+
+            uploadStatus.classList.remove("hidden");
+            uploadStatus.textContent = "📄 Uploading PDF...";
+
+            fetch("{% url 'chat:upload_pdf' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value },
+                body: formData,
+            })
+            .then(res => res.json())
+            .then(data => {
+                uploadStatus.textContent = data.message || "✅ Upload complete!";
+                setTimeout(() => {
+                    uploadStatus.classList.add("hidden");
+                    fileInput.value = "";
+                    location.reload();
+                }, 1000);
+            })
+            .catch(err => {
+                uploadStatus.textContent = "❌ Upload failed!";
+                console.error(err);
+            });
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

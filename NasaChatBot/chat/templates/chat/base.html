@@ -1,0 +1,17 @@
+<!-- chat/templates/chat/base.html -->
+ {% load socialaccount %}
+<nav class="bg-gray-800 p-4 flex justify-between text-gray-200">
+    <div><a href="/" class="font-bold">NASA Chatbot</a></div>
+    <div>
+      {% if user.is_authenticated %}
+        <span class="mr-4">Hello, {{ user.get_full_name|default:user.email }}</span>
+        <a href="{% url 'account_logout' %}" class="underline">Logout</a>
+      {% else %}
+        <a href="{% provider_login_url 'google' %}">Sign in with Google</a>
+      {% endif %}
+    </div>
+  </nav>
+  <div class="p-4">
+    {% block content %}{% endblock %}
+  </div>
+  
