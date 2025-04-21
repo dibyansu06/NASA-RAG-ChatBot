@@ -18,9 +18,9 @@ An intelligent chatbot that answers questions about NASA, space science, and ast
 
 ```bash
 git clone https://github.com/dibyansu06/NASA-RAG-ChatBot.git
-cd backend/
-python -m venv venv
-source venv/bin/activate
+cd NasaChatBot/
+python -m venv env
+.\env\Scripts\activate
 pip install -r requirements.txt
 python manage.py runserver
 
