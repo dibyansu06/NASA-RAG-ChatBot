@@ -7,4 +7,4 @@ __pycache__/
 vectorstores/
 media/documents/
 extras.py
-/knowledge_base
+knowledge_base/
